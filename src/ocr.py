@@ -245,6 +245,23 @@ def process(args):
                     linerecogobj = RecogLine(lineimg, idx, pred_char_cnt)
                     alllineobj.append(linerecogobj)
 
+        if len(alllineobj) == 0:
+            # 検出ゼロの場合は画像全体を1行として認識（手書き・小領域切り抜き対応）
+            page = root.find("PAGE")
+            if page is None:
+                page = ET.SubElement(root, "PAGE")
+            line_elem = ET.SubElement(page, "LINE")
+            line_elem.set("TYPE", "本文")
+            line_elem.set("X", "0")
+            line_elem.set("Y", "0")
+            line_elem.set("WIDTH", str(img_w))
+            line_elem.set("HEIGHT", str(img_h))
+            line_elem.set("CONF", "0.000")
+            line_elem.set("PRED_CHAR_CNT", "100.0")
+            alllinecnt += 1
+            linerecogobj = RecogLine(img, 0, 100.0)
+            alllineobj.append(linerecogobj)
+
         # 認識プロセス
         resultlinesall = process_cascade(
             alllineobj, recognizer30, recognizer50, recognizer100, is_cascade=True
